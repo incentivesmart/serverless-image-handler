@@ -50,6 +50,31 @@ class ImageHandler {
         const image = sharp(originalImage, { failOnError: false });
         const metadata = await image.metadata();
 
+        /* incentivesmart edits:
+
+           Disables resizing only if both desired dimensions exceed original image. Default resize behaviour is "or" not "and".
+           Expands image to contain white background for non-pngss and expands transparent background for pngs.
+        */
+
+	edits.resize.fit = 'contain';
+
+        var enlargeWidth = edits.resize.width && edits.resize.width > metadata.width;
+        var enlargeHeight = edits.resize.height && edits.resize.height > metadata.height;
+
+        if(enlargeWidth && enlargeHeight) {
+            edits.resize.withoutEnlargement  = true;
+        }
+
+        if(metadata.format === "png") {
+            edits.resize.background = { r: 255, g: 255, b: 255, alpha: 0 };
+        }
+        else {
+                edits.resize.background = { r: 255, g: 255, b: 255, alpha: 1 };
+            image.flatten({r: 255, g: 255, b: 255});
+        }
+
+        // End of incentivesmart edits.
+
         // Apply the image edits
         for (const editKey in edits) {
             const value = edits[editKey];
